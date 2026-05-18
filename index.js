@@ -27,19 +27,23 @@ app.use("/image/category", express.static("public/category"));
 app.use("/image/poster", express.static("public/posters"));
 
 // -------------------------
-// MongoDB Connection
+// MongoDB Connection (FIXED)
 // -------------------------
 const URL = process.env.MONGO_URI;
 
+console.log("🔍 Checking MONGO_URI:", URL ? "FOUND" : "MISSING");
+
 if (!URL) {
-  console.error("❌ MONGO_URI is not defined in .env file");
-  process.exit(1);
+  throw new Error("MONGO_URI is missing in Railway environment variables");
 }
 
 mongoose
   .connect(URL)
   .then(() => console.log("✅ Connected to MongoDB Database"))
-  .catch((err) => console.error("❌ MongoDB connection error:", err));
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
+    process.exit(1);
+  });
 
 // -------------------------
 // Routes
@@ -60,16 +64,13 @@ app.use("/notification", require("./routes/notification"));
 // -------------------------
 // Health Check Route
 // -------------------------
-app.get(
-  "/",
-  asyncHandler(async (req, res) => {
-    res.json({
-      success: true,
-      message: "API working successfully",
-      data: null,
-    });
-  })
-);
+app.get("/", asyncHandler(async (req, res) => {
+  res.json({
+    success: true,
+    message: "API working successfully",
+    data: null,
+  });
+}));
 
 // -------------------------
 // Global Error Handler
@@ -83,7 +84,7 @@ app.use((error, req, res, next) => {
 });
 
 // -------------------------
-// Start Server (FIXED)
+// Start Server
 // -------------------------
 const PORT = process.env.PORT || 5000;
 
